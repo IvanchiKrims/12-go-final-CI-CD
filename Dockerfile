@@ -1,10 +1,7 @@
-FROM golang:1.22-alpine
+FROM golang:1.23.0
 
 # Рабочая директория
 WORKDIR /app
-
-# Устанавливаем зависимости, включая sqlite (если нужно, но modernc.org/sqlite — чистый Go, так что не нужен)
-# RUN apk add --no-cache gcc musl-dev  # Не нужен, т.к. CGO отключен
 
 # Копируем go.mod и go.sum для кэширования зависимостей
 COPY go.mod go.sum ./
