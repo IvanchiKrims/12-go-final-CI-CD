@@ -1,21 +1,28 @@
-FROM golang:1.23.0
+FROM golang:1.23.0 AS builder
 
-# Рабочая директория
+# Рабочая директория внутри контейнера
 WORKDIR /app
 
-# Копируем go.mod и go.sum для кэширования зависимостей
+# Копируем модули для кэширования зависимостей
 COPY go.mod go.sum ./
-
 RUN go mod download
 
 # Копируем исходники
-COPY *.go ./
+COPY . .
 
-# Копируем базу данных внутрь образа
+# Собираем статический бинарник
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app main.go parcel.go
+
+# Минимальный образ для запуска
+FROM alpine:latest
+
+WORKDIR /root/
+
+# Копируем бинарник из builder-образа
+COPY --from=builder /app/app .
+
+# Копируем базу данных (если нужна в контейнере)
 COPY tracker.db ./tracker.db
 
-# Собираем статический бинарь (CGO отключён)
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /my_app main.go parcel.go
-
-# Запускаем приложение
-CMD ["/my_app"]
+# Запуск приложения
+CMD ["./app"]
