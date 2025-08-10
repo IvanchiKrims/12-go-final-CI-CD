@@ -1,0 +1,62 @@
+name: Go CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.20
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v ./...
+
+  docker:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/parcel-service
+          docker build -t $IMAGE:${{ github.ref_name }} .
+          docker tag $IMAGE:${{ github.ref_name }} $IMAGE:latest
+
+      - name: Push Docker image
+        run: |
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/parcel-service
+          docker push $IMAGE:${{ github.ref_name }}
+          docker push $IMAGE:latest
