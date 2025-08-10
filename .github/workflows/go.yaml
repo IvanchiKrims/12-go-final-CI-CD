@@ -51,12 +51,12 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/parcel-service
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/ci-cd
           docker build -t $IMAGE:${{ github.ref_name }} .
           docker tag $IMAGE:${{ github.ref_name }} $IMAGE:latest
 
       - name: Push Docker image
         run: |
-          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/parcel-service
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/ci-cd
           docker push $IMAGE:${{ github.ref_name }}
           docker push $IMAGE:latest
