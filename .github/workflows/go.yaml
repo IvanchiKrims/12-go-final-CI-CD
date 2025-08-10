@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*.*.*'    # три части версии: v1.0.0, v1.2.3 и т.п.
+      - 'v*.*.*'    # теги вида v1.0.0, v2.1.3 и т.п.
 
 jobs:
   test:
@@ -55,7 +55,6 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          cd ci-cd
           IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/ci-cd
           docker build -t $IMAGE:$VERSION .
           docker tag $IMAGE:$VERSION $IMAGE:latest
